@@ -25,6 +25,17 @@ passport.use('localsignup',new LocalStrategy({
 },function (req,email,password,done) {
 
     User.findOne({'email':email},function (err,user) {
+
+        req.checkBody('email','invalid Email').notEmpty().isEmail();
+        req.checkBody('password','invalid Password').notEmpty().isLength({min:4});
+        let errors=req.validationErrors();
+        if(errors){
+            let messages=[];
+            errors.forEach((error)=>{
+                messages.push(error.msg);
+            });
+            return done(null,false,req.flash('error',messages));
+        }
         if(err){
             return done(err);
         }
@@ -40,6 +51,43 @@ passport.use('localsignup',new LocalStrategy({
             }
             return done(null,newUser);
         });
+
+    });
+}));
+
+
+
+
+passport.use('localsignin',new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password',
+    passReqToCallback: true,
+},function (req,email,password,done) {
+
+    User.findOne({'email':email},function (err,user) {
+
+        req.checkBody('email','invalid Email').notEmpty().isEmail();
+        req.checkBody('password','invalid Password').notEmpty().isLength({min:4});
+        let errors=req.validationErrors();
+        if(errors){
+            let messages=[];
+            errors.forEach((error)=>{
+                messages.push(error.msg);
+            });
+            return done(null,false,req.flash('error',messages));
+        }
+        if(err){
+            return done(err);
+        }
+        if(!user){
+            return done(null,false,{message:'no user found.'});
+        }
+        if(!user.validPassword(password)){
+            return done(null,false,{message:'wrong password.'});
+
+        }
+        return done(null,user);
+
 
     });
 }));
